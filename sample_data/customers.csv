@@ -1,0 +1,9 @@
+customer_id,name,email,country
+1,Alice Johnson,alice@example.com,USA
+2,Bob Smith,bob@example.com,UK
+3,Carol Lee,carol@example.com,Canada
+4,David Kim,david@example.com,USA
+5,Eva Martinez,eva@example.com,Mexico
+6,Frank Brown,frank@example.com,Australia
+7,Grace Wilson,grace@example.com,USA
+8,Henry Davis,henry@example.com,Germany

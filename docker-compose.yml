@@ -1,0 +1,12 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8005:8005"
+    env_file:
+      - ./backend/.env
+    environment:
+      - SAMPLE_DATA_DIR=/sample_data
+    volumes:
+      - ./backend/app:/app/app
+      - ./sample_data:/sample_data
