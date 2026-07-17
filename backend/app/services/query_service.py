@@ -1,37 +1,109 @@
-import pandas as pd
 from sqlalchemy import text
 
 from app.database.database import engine
-from app.llm.generator import LLMService
-from app.models.query_log import QueryLog
+from app.database.schema_loader import load_schema
+
+from app.prompts.sql_prompt import (
+    SQL_SYSTEM_PROMPT,
+    EXPLANATION_PROMPT
+)
+
+from app.llm.groq_client import (
+    generate_sql,
+    generate_explanation
+)
+from app.utils.validator import validate_sql
+
 from app.utils.chart_builder import build_chart
-from app.utils.sql_validator import validate_sql
 
 
-class QueryService:
-    def __init__(self):
-        self.llm = LLMService()
 
-    def run(self, question: str, db_session) -> dict:
-        generated_sql = self.llm.generate_sql(question)
-        safe_sql = validate_sql(generated_sql)
+def execute_query(question: str):
 
-        with engine.connect() as connection:
-            rows = connection.execute(text(safe_sql)).mappings().all()
 
-        results = [dict(row) for row in rows]
-        explanation = self.llm.explain_results(question, safe_sql, results)
-        chart = build_chart(results)
+    schema = load_schema()
 
-        log = QueryLog(natural_language=question, generated_sql=safe_sql)
-        db_session.add(log)
-        db_session.commit()
 
-        return {
-            "question": question,
-            "sql": safe_sql,
-            "results": results,
-            "row_count": len(results),
-            "explanation": explanation,
-            "chart": chart,
-        }
+    prompt = SQL_SYSTEM_PROMPT.format(
+        schema=schema
+    )
+
+
+    sql_prompt = f"""
+{prompt}
+
+User question:
+
+{question}
+"""
+
+
+    sql = generate_sql(
+        sql_prompt
+    )
+
+
+    sql = sql.replace(
+        "```sql",
+        ""
+    ).replace(
+        "```",
+        ""
+    ).strip()
+
+
+
+    validate_sql(sql)
+
+
+
+    with engine.connect() as connection:
+
+        result = connection.execute(
+            text(sql)
+        )
+
+
+        rows = [
+
+            dict(row._mapping)
+
+            for row in result.fetchall()
+
+        ]
+
+
+
+    explanation_prompt = EXPLANATION_PROMPT.format(
+
+        question=question,
+
+        sql=sql,
+
+        results=rows
+
+    )
+
+
+    explanation = generate_explanation(
+        explanation_prompt
+    )
+
+
+
+    chart = build_chart(
+        rows
+    )
+
+
+    return {
+
+        "sql": sql,
+
+        "results": rows,
+
+        "explanation": explanation,
+
+        "chart": chart
+
+    }

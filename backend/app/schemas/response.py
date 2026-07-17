@@ -1,12 +1,13 @@
-from typing import Any
-
 from pydantic import BaseModel
+from typing import Any
 
 
 class QueryResponse(BaseModel):
-    question: str
+
     sql: str
-    results: list[dict[str, Any]]
-    row_count: int
+
     explanation: str
-    chart: dict[str, Any] | None = None
+
+    results: list[Any]
+
+    chart: dict

@@ -1,26 +1,54 @@
-from pathlib import Path
-
+import sqlite3
 import pandas as pd
-from sqlalchemy import create_engine
+import os
 
-DATA_DIR = Path(__file__).resolve().parent
-DB_PATH = DATA_DIR / "sales.db"
+
+BASE_DIR = os.path.dirname(__file__)
+
+DB_PATH = os.path.join(
+    BASE_DIR,
+    "../backend/sample.db"
+)
 
 
 def create_database():
-    engine = create_engine(f"sqlite:///{DB_PATH}")
 
-    tables = {
-        "products": "products.csv",
+    connection = sqlite3.connect(DB_PATH)
+
+
+    files = {
         "customers": "customers.csv",
-        "sales": "sales.csv",
+        "products": "products.csv",
+        "sales": "sales.csv"
     }
 
-    for table_name, filename in tables.items():
-        df = pd.read_csv(DATA_DIR / filename)
-        df.to_sql(table_name, engine, if_exists="replace", index=False)
 
-    print(f"Database created at {DB_PATH}")
+    for table, file in files.items():
+
+        path = os.path.join(
+            BASE_DIR,
+            file
+        )
+
+        df = pd.read_csv(path)
+
+        df.to_sql(
+            table,
+            connection,
+            if_exists="replace",
+            index=False
+        )
+
+        print(
+            f"Created table: {table}"
+        )
+
+
+    connection.close()
+
+    print(
+        "Database created successfully"
+    )
 
 
 if __name__ == "__main__":

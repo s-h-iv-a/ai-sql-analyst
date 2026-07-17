@@ -1,26 +1,44 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException
 
-from app.database.database import get_db
-from app.schemas.request import QueryRequest
+
+from app.schemas.query import QueryRequest
 from app.schemas.response import QueryResponse
-from app.services.query_service import QueryService
 
-router = APIRouter()
-query_service = QueryService()
+from app.services.query_service import execute_query
 
 
-@router.get("/health")
-def health_check():
-    return {"status": "ok"}
+
+router = APIRouter(
+    prefix="/api",
+    tags=["SQL Analyst"]
+)
 
 
-@router.post("/query", response_model=QueryResponse)
-def ask_question(payload: QueryRequest, db: Session = Depends(get_db)):
+
+@router.post(
+    "/query",
+    response_model=QueryResponse
+)
+async def query_database(
+    request: QueryRequest
+):
+
     try:
-        result = query_service.run(payload.question, db)
-        return QueryResponse(**result)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+        result = execute_query(
+            request.question
+        )
+
+
+        return result
+
+
+    except Exception as e:
+
+        raise HTTPException(
+
+            status_code=400,
+
+            detail=str(e)
+
+        )
