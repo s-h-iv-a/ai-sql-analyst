@@ -1,3 +1,4 @@
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 
 from app.api.routes import router
@@ -6,6 +7,7 @@ from app.core.config import settings
 from app.database.database import Base, engine
 
 from app.models.query_log import QueryLog
+
 
 
 Base.metadata.create_all(
@@ -18,6 +20,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 app.include_router(router)
 
@@ -28,3 +40,4 @@ async def root():
     return {
         "message": "AI SQL Analyst Backend Running"
     }
+
