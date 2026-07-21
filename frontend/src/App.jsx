@@ -19,7 +19,7 @@ function App() {
 
     try {
       const response = await axios.post(
-        "http://localhost:8005/api/query",
+        `${import.meta.env.VITE_API_URL}/api/query`,
         {
           question: currentQuestion,
         }
