@@ -4,26 +4,34 @@ import "./App.css";
 
 function App() {
   const [question, setQuestion] = useState("");
-  const [result, setResult] = useState(null);
+  const [chat, setChat] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const askSQL = async () => {
     if (!question.trim()) return;
 
+    const currentQuestion = question;
+
+    setQuestion("");
     setLoading(true);
     setError("");
-    setResult(null);
 
     try {
       const response = await axios.post(
         "http://localhost:8005/api/query",
         {
-          question: question,
+          question: currentQuestion,
         }
       );
 
-      setResult(response.data);
+      setChat((prev) => [
+        ...prev,
+        {
+          question: currentQuestion,
+          answer: response.data,
+        },
+      ]);
 
     } catch (err) {
       console.error(err);
@@ -48,7 +56,7 @@ function App() {
       <section className="query-box">
 
         <textarea
-          placeholder="Example: Show me all customers"
+          placeholder="Example: Show me total sales by product"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
         />
@@ -67,28 +75,20 @@ function App() {
       )}
 
 
-      {result && (
-        <section className="results">
+
+      {chat.map((item, index) => (
+
+        <section className="results" key={index}>
 
 
-          <div className="card">
+          <div className="card question-card">
 
-            <h2>Generated SQL</h2>
-
-            <pre>
-              {result.sql}
-            </pre>
-
-          </div>
-
-
-
-          <div className="card">
-
-            <h2>Business Explanation</h2>
+            <h2>
+              Question
+            </h2>
 
             <p>
-              {result.explanation}
+              {item.question}
             </p>
 
           </div>
@@ -97,10 +97,40 @@ function App() {
 
           <div className="card">
 
-            <h2>Query Results</h2>
+            <h2>
+              Generated SQL
+            </h2>
+
+            <pre>
+              {item.answer.sql}
+            </pre>
+
+          </div>
 
 
-            {result.results && result.results.length > 0 ? (
+
+          <div className="card">
+
+            <h2>
+              Business Explanation
+            </h2>
+
+            <p>
+              {item.answer.explanation}
+            </p>
+
+          </div>
+
+
+
+          <div className="card">
+
+            <h2>
+              Query Results
+            </h2>
+
+
+            {item.answer.results?.length > 0 ? (
 
               <table>
 
@@ -108,10 +138,14 @@ function App() {
 
                   <tr>
 
-                    {Object.keys(result.results[0]).map((column) => (
+                    {Object.keys(
+                      item.answer.results[0]
+                    ).map((column) => (
+
                       <th key={column}>
                         {column}
                       </th>
+
                     ))}
 
                   </tr>
@@ -121,11 +155,13 @@ function App() {
 
                 <tbody>
 
-                  {result.results.map((row, index) => (
+                  {item.answer.results.map(
+                    (row, rowIndex) => (
 
-                    <tr key={index}>
+                    <tr key={rowIndex}>
 
-                      {Object.values(row).map((value, i) => (
+                      {Object.values(row).map(
+                        (value, i) => (
 
                         <td key={i}>
                           {value}
@@ -138,7 +174,6 @@ function App() {
                   ))}
 
                 </tbody>
-
 
               </table>
 
@@ -154,11 +189,12 @@ function App() {
 
 
         </section>
-      )}
+
+      ))}
+
 
     </div>
   );
 }
-
 
 export default App;

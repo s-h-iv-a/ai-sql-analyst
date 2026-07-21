@@ -227,3 +227,7 @@ tr:hover {
   color: #991b1b;
 
 }
+
+.question-card {
+  border-left: 5px solid #2563eb;
+}
